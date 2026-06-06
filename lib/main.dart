@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/animation.dart';
 
 // ============================================================
 //  创新实验 第14周 — 任务清单 App
@@ -24,13 +25,9 @@ class InnovationHelloApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: '创新实验 Flutter 首页',
-      debugShowCheckedModeBanner: false,
+      title: '🎨 Flutter 创意空间',
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: Colors.indigo,
-          brightness: Brightness.light,
-        ),
+        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFFE91E63)),
         useMaterial3: true,
       ),
       home: const HelloHomePage(),
@@ -46,33 +43,38 @@ class HelloHomePage extends StatefulWidget {
   State<HelloHomePage> createState() => _HelloHomePageState();
 }
 
-class _HelloHomePageState extends State<HelloHomePage> {
-  // ---- 默认任务（来源于第14周讲义"必做个性化修改"）----
-  final List<TaskItem> _tasks = [
-    TaskItem(title: '修改 AppBar 标题为个性化标题'),
-    TaskItem(title: '修改页面说明文字'),
-    TaskItem(title: '修改按钮提示文案'),
-    TaskItem(title: '修改计数含义（如"已完成任务次数"）'),
-    TaskItem(title: '修改主题颜色'),
-    TaskItem(title: '增加姓名、学号后四位或小组编号'),
-    TaskItem(title: '增加一个图标'),
-    TaskItem(title: '调整文字大小、卡片、间距或页面布局'),
-    TaskItem(title: '页面运行无红屏 ✅'),
-    TaskItem(title: '点击按钮后数字或文字有可见变化 ✅'),
-    TaskItem(title: '保存运行截图'),
-    TaskItem(title: 'GitHub 有提交记录'),
-  ];
+class _HelloHomePageState extends State<HelloHomePage> with TickerProviderStateMixin {
+  int completedTasks = 0;
+  late AnimationController _animationController;
+  late Animation<double> _scaleAnimation;
+  bool _isAnimating = false;
 
-  // ---- 计算属性 ----
-  int get _completedCount => _tasks.where((t) => t.isCompleted).length;
-  int get _totalCount => _tasks.length;
-  double get _progress =>
-      _totalCount > 0 ? _completedCount / _totalCount : 0;
+  @override
+  void initState() {
+    super.initState();
+    _animationController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 300),
+    );
+    _scaleAnimation = Tween<double>(begin: 1.0, end: 1.2).animate(
+      CurvedAnimation(parent: _animationController, curve: Curves.easeOut),
+    );
+  }
 
-  // ---- 切换完成状态 ----
-  void _toggleTask(int index) {
+  @override
+  void dispose() {
+    _animationController.dispose();
+    super.dispose();
+  }
+
+  void finishOneTask() {
     setState(() {
-      _tasks[index].isCompleted = !_tasks[index].isCompleted;
+      _isAnimating = true;
+      _animationController.forward().then((_) {
+        _animationController.reverse();
+        completedTasks += 1;
+        setState(() => _isAnimating = false);
+      });
     });
   }
 
@@ -154,8 +156,26 @@ class _HelloHomePageState extends State<HelloHomePage> {
       // ========== AppBar ==========
       appBar: AppBar(
         title: const Text(
-          '创新实验 Flutter 首页',
-          style: TextStyle(fontWeight: FontWeight.bold),
+          '🎀 创新实验第14周',
+          style: TextStyle(fontFamily: 'Georgia', fontWeight: FontWeight.bold),
+        ),
+        backgroundColor: const Color(0xFFE91E63),
+        centerTitle: true,
+        elevation: 4,
+        shadowColor: Colors.pinkAccent.withOpacity(0.5),
+      ),
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Color(0xFFFFEBEE),
+              Color(0xFFFFCDD2),
+              Color(0xFFE1BEE7),
+              Color(0xFFD1C4E9),
+            ],
+          ),
         ),
         backgroundColor: colorScheme.inversePrimary,
         actions: [
@@ -187,39 +207,95 @@ class _HelloHomePageState extends State<HelloHomePage> {
             ),
             child: Column(
               children: [
-                // 火箭图标（修改点①）
-                const Icon(Icons.rocket_launch,
-                    size: 48, color: Colors.indigo),
-                const SizedBox(height: 12),
-
-                // 进度文字
-                Text(
-                  '已完成任务次数：$_completedCount / $_totalCount',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
+                // 动画图标
+                ScaleTransition(
+                  scale: _scaleAnimation,
+                  child: const Icon(
+                    Icons.sparkles,
+                    size: 100,
+                    color: Color(0xFFE91E63),
+                  ),
                 ),
-                const SizedBox(height: 12),
-
-                // 进度条
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(8),
-                  child: LinearProgressIndicator(
-                    value: _progress,
-                    minHeight: 10,
-                    backgroundColor: colorScheme.surfaceContainerHighest,
-                    valueColor: AlwaysStoppedAnimation<Color>(
-                      _progress >= 1.0 ? Colors.green : Colors.indigo,
-                    ),
+                const SizedBox(height: 20),
+                // 艺术字标题
+                const Text(
+                  '🌟 Hello Flutter! 🌟',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 32,
+                    fontWeight: FontWeight.w900,
+                    fontFamily: 'Arial Black',
+                    letterSpacing: 2,
+                    foreground: Paint()
+                      ..shader = LinearGradient(
+                        colors: [Color(0xFFE91E63), Color(0xFF9C27B0), Color(0xFF2196F3)],
+                      ).createShader(const Rect.fromLTWH(0, 0, 400, 40)),
                   ),
                 ),
                 const SizedBox(height: 8),
-
-                // 百分比
-                Text(
-                  '${(_progress * 100).toStringAsFixed(0)}%',
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: colorScheme.onSurfaceVariant,
+                // 副标题
+                const Text(
+                  '我已完成第14周入门任务！✓',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 18,
+                    color: Color(0xFF7C4DFF),
+                    fontStyle: FontStyle.italic,
+                  ),
+                ),
+                const SizedBox(height: 24),
+                // 个人信息卡片
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.8),
+                    borderRadius: BorderRadius.circular(20),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.pink.withOpacity(0.3),
+                        blurRadius: 10,
+                        offset: const Offset(0, 5),
+                      ),
+                    ],
+                    border: Border.all(
+                      color: const Color(0xFFE91E63).withOpacity(0.3),
+                      width: 2,
+                    ),
+                  ),
+                  child: Column(
+                    children: const [
+                      Text(
+                        '姓名：张三',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFFE91E63),
+                        ),
+                      ),
+                      SizedBox(height: 8),
+                      Text(
+                        '学号后四位：1234 | 小组：第5组',
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Colors.grey[600],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 32),
+                // 计数器动画卡片
+                AnimatedContainer(
+                  duration: const Duration(milliseconds: 300),
+                  padding: const EdgeInsets.all(28),
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: const Color(0xFFE91E63),
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFFE91E63).withOpacity(0.6),
+                        blurRadius: _isAnimating ? 25 : 15,
+                        spreadRadius: _isAnimating ? 10 : 5,
                       ),
                 ),
               ],
@@ -234,78 +310,101 @@ class _HelloHomePageState extends State<HelloHomePage> {
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                     color: colorScheme.onSurfaceVariant,
                   ),
-            ),
-          ),
-
-          // ---- 个人信息（修改点③）----
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-            child: Text(
-              '👤 姓名：请填写姓名  ｜  小组：第 5 组',
-              style: Theme.of(context).textTheme.bodySmall,
-            ),
-          ),
-          const Divider(indent: 16, endIndent: 16),
-
-          // ---- 任务列表 ----
-          Expanded(
-            child: _tasks.isEmpty
-                ? Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(Icons.task_alt,
-                            size: 64, color: colorScheme.outline),
-                        const SizedBox(height: 16),
-                        Text(
-                          '暂无任务，点击右下角 + 添加',
-                          style: TextStyle(color: colorScheme.outline),
+                  child: Column(
+                    children: [
+                      Text(
+                        '$completedTasks',
+                        style: const TextStyle(
+                          fontSize: 56,
+                          fontWeight: FontWeight.w900,
+                          color: Colors.white,
+                          fontFamily: 'Arial Black',
                         ),
-                      ],
-                    ),
-                  )
-                : ListView.builder(
-                    padding: const EdgeInsets.only(bottom: 80),
-                    itemCount: _tasks.length,
-                    itemBuilder: (context, index) {
-                      final task = _tasks[index];
-                      final isDone = task.isCompleted;
-                      return Card(
-                        margin: const EdgeInsets.symmetric(
-                            horizontal: 12, vertical: 4),
-                        elevation: isDone ? 0 : 1,
-                        color: isDone
-                            ? colorScheme.surfaceContainerLow
-                            : null,
-                        child: ListTile(
-                          leading: Checkbox(
-                            value: isDone,
-                            onChanged: (_) => _toggleTask(index),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(4),
-                            ),
-                          ),
-                          title: Text(
-                            task.title,
-                            style: TextStyle(
-                              decoration: isDone
-                                  ? TextDecoration.lineThrough
-                                  : null,
-                              color: isDone
-                                  ? colorScheme.outline
-                                  : null,
-                            ),
-                          ),
-                          trailing: isDone
-                              ? Icon(Icons.check_circle,
-                                  color: Colors.green[400], size: 22)
-                              : null,
+                      ),
+                      const SizedBox(height: 4),
+                      const Text(
+                        '学习打卡次数',
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Colors.white70,
+                          fontWeight: FontWeight.w500,
                         ),
                       );
                     },
                   ),
+                ),
+                const SizedBox(height: 24),
+                // 励志语录
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.6),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Text(
+                    '💪 "每一天的努力，都是未来的礼物！"',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: Color(0xFF5D4037),
+                      fontStyle: FontStyle.italic,
+                    ),
+                  ),
+                ),
+                // 装饰星星
+                const SizedBox(height: 16),
+                const Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.star, size: 20, color: Colors.amber),
+                    Icon(Icons.star, size: 20, color: Colors.amber),
+                    Icon(Icons.star, size: 20, color: Colors.amber),
+                    Icon(Icons.star, size: 20, color: Colors.amber),
+                    Icon(Icons.star, size: 20, color: Colors.amber),
+                  ],
+                ),
+              ],
+            ),
           ),
-        ],
+        ),
+      ),
+      // 个性化按钮
+      floatingActionButton: GestureDetector(
+        onTap: finishOneTask,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 16),
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              colors: [Color(0xFFE91E63), Color(0xFF9C27B0)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(30),
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0xFFE91E63).withOpacity(0.5),
+                blurRadius: 12,
+                offset: const Offset(0, 6),
+              ),
+            ],
+          ),
+          child: const Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.check_circle, color: Colors.white, size: 24),
+              SizedBox(width: 10),
+              Text(
+                '今日学习打卡 ✨',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                  letterSpacing: 1.2,
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
     );
